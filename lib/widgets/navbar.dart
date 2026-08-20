@@ -21,7 +21,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
 
   void _openMobileMenu(BuildContext context, List<String> navItems) {
     final scaffold = Scaffold.maybeOf(context);
-    if (scaffold?.hasEndDrawer ?? false) {
+    if (scaffold != null && scaffold.hasEndDrawer) {
       scaffold.openEndDrawer();
       return;
     }
@@ -62,14 +62,16 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.sizeOf(context).width < 900;
+    final width = MediaQuery.sizeOf(context).width;
+    final bool isMobile = width < 900;
+    final bool isCompact = width < 430;
     final navItems = AppStrings.navItems(language);
     final brandSubtitle = AppStrings.brandSubtitle(language);
 
     return Container(
       height: preferredSize.height,
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 16.0 : 40.0,
+        horizontal: isMobile ? (isCompact ? 10.0 : 16.0) : 40.0,
         vertical: 12.0,
       ),
       decoration: const BoxDecoration(
@@ -85,44 +87,53 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue,
-                  borderRadius: BorderRadius.circular(6.0),
-                ),
-                child: const Icon(
-                  Icons.business_rounded,
-                  color: AppColors.accentGold,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'CASA GET SARL',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryBlue,
-                      letterSpacing: 0.5,
-                    ),
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(isCompact ? 6.0 : 8.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue,
+                    borderRadius: BorderRadius.circular(6.0),
                   ),
-                  Text(
-                    brandSubtitle,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textDark,
-                    ),
+                  child: Icon(
+                    Icons.business_rounded,
+                    color: AppColors.accentGold,
+                    size: isCompact ? 24 : 28,
                   ),
-                ],
-              ),
-            ],
+                ),
+                SizedBox(width: isCompact ? 8 : 12),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'CASA GET SARL',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: isCompact ? 16 : 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryBlue,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      if (!isCompact)
+                        Text(
+                          brandSubtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           if (!isMobile)
             Expanded(
@@ -142,10 +153,13 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
             )
           else
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 _languageSelector(),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                   icon: const Icon(Icons.menu, color: AppColors.primaryBlue),
                   onPressed: () => _openMobileMenu(context, navItems),
                 ),

@@ -28,7 +28,7 @@ class HeroSection extends StatelessWidget {
             : 52.0;
     final subtitleFont = isMobile ? 14.0 : isTablet ? 16.0 : 18.0;
     final buttonPadding = isMobile
-        ? const EdgeInsets.symmetric(horizontal: 22, vertical: 16)
+      ? const EdgeInsets.symmetric(horizontal: 22, vertical: 16)
         : const EdgeInsets.symmetric(horizontal: 28, vertical: 18);
 
     return Container(

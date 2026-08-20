@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 
-class ProjectsSection extends StatelessWidget {
+class ProjectsSection extends StatefulWidget {
   const ProjectsSection({
     super.key,
     required this.language,
@@ -11,8 +11,115 @@ class ProjectsSection extends StatelessWidget {
   final String language;
 
   @override
+  State<ProjectsSection> createState() => _ProjectsSectionState();
+}
+
+class _ProjectsSectionState extends State<ProjectsSection> {
+  static const _projectImages = [
+    'images/Projet/projet.jpeg',
+    'images/Projet/projet 2.jpeg',
+    'images/Projet/project.jpeg',
+    'images/Projet/proj.jpeg',
+  ];
+
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _showPreviousImage() {
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _showNextImage() {
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  Widget _buildProjectCarousel({required bool isMobile}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        topLeft: const Radius.circular(18),
+        bottomLeft: Radius.circular(isMobile ? 0 : 18),
+        topRight: Radius.circular(isMobile ? 18 : 0),
+        bottomRight: Radius.circular(isMobile ? 0 : 0),
+      ),
+      child: SizedBox(
+        height: isMobile ? 220 : 260,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: _projectImages.length,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+              itemBuilder: (context, index) => Image.asset(
+                _projectImages[index],
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 0,
+              bottom: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _CarouselButton(
+                    icon: Icons.chevron_left,
+                    onPressed: _showPreviousImage,
+                    tooltip: 'Previous image',
+                  ),
+                  _CarouselButton(
+                    icon: Icons.chevron_right,
+                    onPressed: _showNextImage,
+                    tooltip: 'Next image',
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _projectImages.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    height: 7,
+                    width: index == _currentPage ? 22 : 7,
+                    decoration: BoxDecoration(
+                      color: index == _currentPage
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.65),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final projects = AppStrings.projectCards(language);
+    final projects = AppStrings.projectCards(widget.language);
     final firstProject = projects.first;
     final isMobile = MediaQuery.of(context).size.width < 768;
 
@@ -29,7 +136,7 @@ class ProjectsSection extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                AppStrings.projectsTitle(language),
+                AppStrings.projectsTitle(widget.language),
                 style: TextStyle(
                   fontSize: isMobile ? 28 : 32,
                   fontWeight: FontWeight.bold,
@@ -46,18 +153,7 @@ class ProjectsSection extends StatelessWidget {
                 child: isMobile
                     ? Column(
                         children: [
-                          Container(
-                            height: 220,
-                            decoration: const BoxDecoration(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(18),
-                              ),
-                              image: DecorationImage(
-                                image: AssetImage('images/project.jpeg'),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
+                          _buildProjectCarousel(isMobile: true),
                           Padding(
                             padding: const EdgeInsets.all(18),
                             child: Column(
@@ -106,18 +202,7 @@ class ProjectsSection extends StatelessWidget {
                         children: [
                           Expanded(
                             flex: 3,
-                            child: Container(
-                              height: 260,
-                              decoration: const BoxDecoration(
-                                borderRadius: BorderRadius.horizontal(
-                                  left: Radius.circular(18),
-                                ),
-                                image: DecorationImage(
-                                  image: AssetImage('images/project.jpeg'),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
+                            child: _buildProjectCarousel(isMobile: false),
                           ),
                           Expanded(
                             flex: 2,
@@ -193,6 +278,31 @@ class ProjectsSection extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CarouselButton extends StatelessWidget {
+  const _CarouselButton({
+    required this.icon,
+    required this.onPressed,
+    required this.tooltip,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      icon: Icon(icon, color: Colors.white),
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.black54,
+        minimumSize: const Size(38, 38),
       ),
     );
   }
