@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../widgets/navbar.dart';
 import '../widgets/hero_section.dart';
-import '../widgets/about_section.dart';
 import '../widgets/services_section.dart';
 import '../widgets/projects_section.dart';
 import '../widgets/contact_section.dart';
@@ -29,15 +28,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const int _homeIndex = 0;
-  static const int _aboutIndex = 1;
-  static const int _servicesIndex = 2;
-  static const int _projectsIndex = 3;
-  static const int _leisureIndex = 4;
-  static const int _blogIndex = 5;
-  static const int _contactIndex = 6;
+  static const int _servicesIndex = 1;
+  static const int _projectsIndex = 2;
+  static const int _leisureIndex = 3;
+  static const int _blogIndex = 4;
+  static const int _contactIndex = 5;
 
   final ScrollController _scrollController = ScrollController();
-  final List<GlobalKey> _sectionKeys = List.generate(7, (_) => GlobalKey());
+  final List<GlobalKey> _sectionKeys = List.generate(6, (_) => GlobalKey());
   int _selectedIndex = _homeIndex;
   bool _showBackToTop = false;
 
@@ -189,8 +187,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   selected: _selectedIndex == entry.key,
                   selectedColor: AppColors.accentGold,
                   onTap: () {
-                    _scrollToSection(entry.key);
                     Navigator.of(context).pop();
+                    _scrollToSection(entry.key);
                   },
                 )),
           ],
@@ -222,10 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
         controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(key: _sectionKeys[0], child: HeroSection(language: widget.language)),
-          SliverToBoxAdapter(key: _sectionKeys[1], child: AboutSection(language: widget.language)),
-          SliverToBoxAdapter(key: _sectionKeys[2], child: ServicesSection(language: widget.language)),
-          SliverToBoxAdapter(key: _sectionKeys[3], child: ProjectsSection(language: widget.language)),
-          SliverToBoxAdapter(key: _sectionKeys[6], child: ContactSection(language: widget.language)),
+          SliverToBoxAdapter(key: _sectionKeys[1], child: ServicesSection(language: widget.language)),
+          SliverToBoxAdapter(key: _sectionKeys[2], child: ProjectsSection(language: widget.language)),
+          SliverToBoxAdapter(key: _sectionKeys[5], child: ContactSection(language: widget.language)),
           SliverToBoxAdapter(child: Footer(language: widget.language)),
         ],
       ),
