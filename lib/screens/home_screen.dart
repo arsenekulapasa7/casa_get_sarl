@@ -3,11 +3,11 @@ import '../widgets/navbar.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/services_section.dart';
 import '../widgets/projects_section.dart';
+import '../widgets/news_section.dart';
 import '../widgets/contact_section.dart';
 import '../widgets/footer.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
-import 'blog_page.dart';
 import 'leisure_page.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -30,8 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   static const int _homeIndex = 0;
   static const int _servicesIndex = 1;
   static const int _projectsIndex = 2;
-  static const int _leisureIndex = 3;
-  static const int _blogIndex = 4;
+  static const int _newsIndex = 3;
+  static const int _leisureIndex = 4;
   static const int _contactIndex = 5;
 
   final ScrollController _scrollController = ScrollController();
@@ -95,15 +95,14 @@ class _HomeScreenState extends State<HomeScreen> {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
-          final tween = Tween(begin: begin, end: end)
-              .chain(CurveTween(curve: Curves.easeOutCubic));
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: Curves.easeOutCubic));
 
           return SlideTransition(
             position: animation.drive(tween),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            child: FadeTransition(opacity: animation, child: child),
           );
         },
         transitionDuration: const Duration(milliseconds: 500),
@@ -119,15 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    if (index == _blogIndex) {
-      setState(() => _selectedIndex = index);
-      _openPremiumPage(BlogPage(language: widget.language));
-      return;
-    }
-
     if (index == _contactIndex) {
       setState(() => _selectedIndex = index);
-      final sectionContext = _sectionKeys[_contactIndex].currentContext;
+      final sectionContext = _sectionKeys[5].currentContext;
       if (sectionContext != null) {
         Scrollable.ensureVisible(
           sectionContext,
@@ -182,15 +175,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(color: Colors.white, fontSize: 20),
               ),
             ),
-            ...navItems.asMap().entries.map((entry) => ListTile(
-                  title: Text(entry.value),
-                  selected: _selectedIndex == entry.key,
-                  selectedColor: AppColors.accentGold,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _scrollToSection(entry.key);
-                  },
-                )),
+            ...navItems.asMap().entries.map(
+              (entry) => ListTile(
+                title: Text(entry.value),
+                selected: _selectedIndex == entry.key,
+                selectedColor: AppColors.accentGold,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _scrollToSection(entry.key);
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -219,10 +214,30 @@ class _HomeScreenState extends State<HomeScreen> {
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          SliverToBoxAdapter(key: _sectionKeys[0], child: HeroSection(language: widget.language)),
-          SliverToBoxAdapter(key: _sectionKeys[1], child: ServicesSection(language: widget.language)),
-          SliverToBoxAdapter(key: _sectionKeys[2], child: ProjectsSection(language: widget.language)),
-          SliverToBoxAdapter(key: _sectionKeys[5], child: ContactSection(language: widget.language)),
+          SliverToBoxAdapter(
+            key: _sectionKeys[0],
+            child: HeroSection(
+              language: widget.language,
+              onContactPressed: () => _scrollToSection(_contactIndex),
+              onProjectsPressed: () => _scrollToSection(_projectsIndex),
+            ),
+          ),
+          SliverToBoxAdapter(
+            key: _sectionKeys[1],
+            child: ServicesSection(language: widget.language),
+          ),
+          SliverToBoxAdapter(
+            key: _sectionKeys[2],
+            child: ProjectsSection(language: widget.language),
+          ),
+          SliverToBoxAdapter(
+            key: _sectionKeys[_newsIndex],
+            child: NewsSection(language: widget.language),
+          ),
+          SliverToBoxAdapter(
+            key: _sectionKeys[5],
+            child: ContactSection(language: widget.language),
+          ),
           SliverToBoxAdapter(child: Footer(language: widget.language)),
         ],
       ),

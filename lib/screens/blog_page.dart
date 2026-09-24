@@ -7,11 +7,7 @@ import 'home_screen.dart';
 import 'leisure_page.dart';
 
 class BlogPage extends StatefulWidget {
-  const BlogPage({
-    super.key,
-    required this.language,
-    this.onLanguageChanged,
-  });
+  const BlogPage({super.key, required this.language, this.onLanguageChanged});
 
   final String language;
   final ValueChanged<String>? onLanguageChanged;
@@ -35,15 +31,14 @@ class _BlogPageState extends State<BlogPage> {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
-          final tween = Tween(begin: begin, end: end)
-              .chain(CurveTween(curve: Curves.easeOutCubic));
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: Curves.easeOutCubic));
 
           return SlideTransition(
             position: animation.drive(tween),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            child: FadeTransition(opacity: animation, child: child),
           );
         },
         transitionDuration: const Duration(milliseconds: 450),
@@ -53,20 +48,36 @@ class _BlogPageState extends State<BlogPage> {
   }
 
   void _handleNavItem(BuildContext context, int index) {
-    if (index == 5) return;
     if (index == 4) {
-      _openPage(context, LeisurePage(
-        language: language,
-        onLanguageChanged: widget.onLanguageChanged,
-      ));
+      _openPage(
+        context,
+        LeisurePage(
+          language: language,
+          onLanguageChanged: widget.onLanguageChanged,
+        ),
+      );
+      return;
+    }
+    if (index == 5) {
+      _openPage(
+        context,
+        HomeScreen(
+          language: language,
+          onLanguageChanged: widget.onLanguageChanged ?? (_) {},
+          initialIndex: 5,
+        ),
+      );
       return;
     }
 
-    _openPage(context, HomeScreen(
-      language: language,
-      onLanguageChanged: widget.onLanguageChanged ?? (_) {},
-      initialIndex: index,
-    ));
+    _openPage(
+      context,
+      HomeScreen(
+        language: language,
+        onLanguageChanged: widget.onLanguageChanged ?? (_) {},
+        initialIndex: index,
+      ),
+    );
   }
 
   @override
@@ -79,7 +90,7 @@ class _BlogPageState extends State<BlogPage> {
         child: Navbar(
           language: language,
           onLanguageChanged: _changeLanguage,
-          selectedIndex: 5,
+          selectedIndex: -1,
           onItemSelected: (index) => _handleNavItem(context, index),
         ),
       ),
@@ -107,7 +118,11 @@ class _BlogPageState extends State<BlogPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 30),
+                  const Icon(
+                    Icons.auto_stories_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                   const SizedBox(height: 10),
                   const Text(
                     'Blog',
@@ -130,71 +145,96 @@ class _BlogPageState extends State<BlogPage> {
               ),
             ),
             const SizedBox(height: 16),
-            ...posts.map((post) => Container(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
+            ...posts.map(
+              (post) => Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.blogLight,
-                          borderRadius: BorderRadius.circular(999),
+                      decoration: BoxDecoration(
+                        color: AppColors.blogLight,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        post.category,
+                        style: const TextStyle(
+                          color: AppColors.blogPurple,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
                         ),
-                        child: Text(
-                          post.category,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      post.title,
+                      style: const TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      post.excerpt,
+                      style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 13,
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 13,
+                          color: AppColors.blogPurple,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          post.date,
                           style: const TextStyle(
-                            color: AppColors.blogPurple,
-                            fontWeight: FontWeight.bold,
                             fontSize: 11,
+                            color: AppColors.textDark,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        post.title,
-                        style: const TextStyle(
-                          color: AppColors.primaryBlue,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(width: 12),
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 13,
+                          color: AppColors.blogPurple,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        post.excerpt,
-                        style: const TextStyle(
-                          color: AppColors.textDark,
-                          fontSize: 13,
-                          height: 1.6,
+                        const SizedBox(width: 6),
+                        Text(
+                          post.readTime,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textDark,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.blogPurple),
-                          const SizedBox(width: 6),
-                          Text(post.date, style: const TextStyle(fontSize: 11, color: AppColors.textDark)),
-                          const SizedBox(width: 12),
-                          Icon(Icons.access_time_rounded, size: 13, color: AppColors.blogPurple),
-                          const SizedBox(width: 6),
-                          Text(post.readTime, style: const TextStyle(fontSize: 11, color: AppColors.textDark)),
-                        ],
-                      ),
-                    ],
-                  ),
-                )),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Footer(language: language),
           ],
         ),

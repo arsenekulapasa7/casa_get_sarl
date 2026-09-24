@@ -3,7 +3,6 @@ import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../widgets/footer.dart';
 import '../widgets/navbar.dart';
-import 'blog_page.dart';
 import 'home_screen.dart';
 import 'leisure_page.dart';
 
@@ -51,7 +50,11 @@ class _CreditMaisonPageState extends State<CreditMaisonPage> {
       return;
     }
     if (index == 4) {
-      _openPage(context, BlogPage(language: language));
+      _openPage(context, HomeScreen(
+        language: language,
+        onLanguageChanged: _changeLanguage,
+        initialIndex: 4,
+      ));
       return;
     }
 
@@ -201,6 +204,14 @@ class _CreditMaisonPageState extends State<CreditMaisonPage> {
   }
 
   Widget _propertyGrid(bool isMobile) {
+    final propertyImages = [
+      'images/maison financees/habitation.jpeg',
+      'images/maison financees/inachevee.jpeg',
+      'images/maison financees/commerciale.jpeg',
+      'images/maison financees/sanitaire.jpeg',
+      'images/maison financees/hotel.jpeg',
+    ];
+
     final properties = isFrench
         ? [
             (
@@ -272,13 +283,20 @@ class _CreditMaisonPageState extends State<CreditMaisonPage> {
         return Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
+            image: DecorationImage(
+              image: AssetImage(propertyImages[index]),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                AppColors.primaryBlue.withOpacity(0.72),
+                BlendMode.darken,
+              ),
+            ),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+            border: Border.all(color: AppColors.accentGold.withOpacity(0.7)),
           ),
           child: Row(
             children: [
-              Icon(property.$3, color: AppColors.primaryBlue, size: 34),
+              Icon(property.$3, color: AppColors.accentGold, size: 34),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -289,7 +307,7 @@ class _CreditMaisonPageState extends State<CreditMaisonPage> {
                       property.$1,
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        color: AppColors.primaryBlue,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -298,7 +316,7 @@ class _CreditMaisonPageState extends State<CreditMaisonPage> {
                       style: const TextStyle(
                         fontSize: 13,
                         height: 1.35,
-                        color: AppColors.textDark,
+                        color: Colors.white,
                       ),
                     ),
                   ],

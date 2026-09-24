@@ -52,10 +52,9 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
       0 => Icons.home_rounded,
       1 => Icons.info_outline_rounded,
       2 => Icons.design_services_rounded,
-      3 => Icons.folder_copy_rounded,
+      3 => Icons.article_rounded,
       4 => Icons.surfing_rounded,
-      5 => Icons.auto_stories_rounded,
-      6 => Icons.contact_mail_rounded,
+      5 => Icons.contact_mail_rounded,
       _ => Icons.circle_outlined,
     };
   }
@@ -77,11 +76,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -137,15 +132,14 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
           ),
           if (!isMobile)
             Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 8.0,
-                  runSpacing: 4.0,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    ...navItems.asMap().entries.map((entry) => _navItem(entry.value, entry.key)),
+                    ...navItems.asMap().entries.map(
+                      (entry) => _navItem(entry.value, entry.key),
+                    ),
                     _languageSelector(),
                   ],
                 ),
@@ -159,7 +153,10 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
                 const SizedBox(width: 4),
                 IconButton(
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
                   icon: const Icon(Icons.menu, color: AppColors.primaryBlue),
                   onPressed: () => _openMobileMenu(context, navItems),
                 ),
@@ -172,11 +169,21 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
 
   Widget _navItem(String title, int index) {
     final bool isSelected = selectedIndex == index;
-    final bool isLeisure = title.toLowerCase() == 'leisure' || title.toLowerCase() == 'loisirs';
-    final bool isBlog = title.toLowerCase() == 'blog';
+    final bool isLeisure =
+        title.toLowerCase() == 'leisure' || title.toLowerCase() == 'loisirs';
+    final bool isNews =
+        title.toLowerCase() == 'news' || title.toLowerCase() == 'actualités';
 
-    final Color baseColor = isBlog ? AppColors.blogPurple : isLeisure ? AppColors.leisureBlue : AppColors.primaryBlue;
-    final Color softColor = isBlog ? AppColors.blogLight : isLeisure ? AppColors.leisureLight : AppColors.backgroundLight;
+    final Color baseColor = isNews
+        ? AppColors.blogPurple
+        : isLeisure
+        ? AppColors.leisureBlue
+        : AppColors.primaryBlue;
+    final Color softColor = isNews
+        ? AppColors.blogLight
+        : isLeisure
+        ? AppColors.leisureLight
+        : AppColors.backgroundLight;
     final IconData icon = _iconForIndex(index);
 
     final decoration = isSelected
@@ -202,13 +209,13 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
           );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => onItemSelected(index),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 9.0),
+          padding: const EdgeInsets.symmetric(horizontal: 9.0, vertical: 8.0),
           decoration: decoration,
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -218,7 +225,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
                 size: 16,
                 color: isSelected ? Colors.white : baseColor,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 5),
               Text(
                 title,
                 style: TextStyle(

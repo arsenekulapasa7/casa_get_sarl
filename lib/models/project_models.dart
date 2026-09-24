@@ -5,6 +5,7 @@ class BlogPost {
     required this.category,
     required this.date,
     required this.readTime,
+    this.content = '',
     this.imagePath = '',
   });
 
@@ -13,7 +14,24 @@ class BlogPost {
   final String category;
   final String date;
   final String readTime;
+  final String content;
   final String imagePath;
+}
+
+class Project {
+  const Project({
+    required this.title,
+    required this.summary,
+    required this.description,
+    required this.imagePath,
+    this.gallery = const [],
+  });
+
+  final String title;
+  final String summary;
+  final String description;
+  final String imagePath;
+  final List<String> gallery;
 }
 
 class LeisureHighlight {

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
+import '../services/content_store.dart';
 import '../widgets/footer.dart';
 import '../widgets/navbar.dart';
-import 'blog_page.dart';
 import 'home_screen.dart';
 
 class LeisurePage extends StatefulWidget {
@@ -23,9 +24,75 @@ class LeisurePage extends StatefulWidget {
 class _LeisurePageState extends State<LeisurePage> {
   late String language = widget.language;
 
+  late final List<String> _videoAssets = [
+    AppStrings.leisureVideo(0, 'images/video/vision.mp4'),
+    AppStrings.leisureVideo(1, 'images/video/objectif.mp4'),
+    AppStrings.leisureVideo(2, 'images/video/mission.mp4'),
+  ];
+
+  late final List<VideoPlayerController> _videoControllers = _videoAssets
+      .map(
+        (asset) => ContentStore.isDataUrl(asset)
+            ? VideoPlayerController.networkUrl(Uri.parse(asset))
+            : VideoPlayerController.asset(asset),
+      )
+      .toList();
+  final List<String?> _videoErrors = List<String?>.filled(3, null);
+
+  @override
+  void initState() {
+    super.initState();
+    for (var index = 0; index < _videoControllers.length; index++) {
+      _loadVideo(index);
+    }
+  }
+
+  Future<void> _loadVideo(int index) async {
+    final controller = _videoControllers[index];
+    try {
+      await controller.initialize();
+      await controller.setLooping(true);
+      await controller.setVolume(0);
+      if (mounted) setState(() {});
+
+      try {
+        await controller.play();
+      } catch (_) {
+        if (mounted) setState(() {});
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _videoErrors[index] = 'Vidéo indisponible';
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _videoControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
   void _changeLanguage(String value) {
     setState(() => language = value);
     widget.onLanguageChanged?.call(value);
+  }
+
+  Future<void> _toggleVideo(VideoPlayerController controller) async {
+    try {
+      if (controller.value.isPlaying) {
+        await controller.pause();
+      } else {
+        await controller.play();
+      }
+      if (mounted) setState(() {});
+    } catch (_) {
+      if (mounted) setState(() {});
+    }
   }
 
   void _openPage(BuildContext context, Widget page) {
@@ -35,15 +102,14 @@ class _LeisurePageState extends State<LeisurePage> {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
-          final tween = Tween(begin: begin, end: end)
-              .chain(CurveTween(curve: Curves.easeOutCubic));
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: Curves.easeOutCubic));
 
           return SlideTransition(
             position: animation.drive(tween),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            child: FadeTransition(opacity: animation, child: child),
           );
         },
         transitionDuration: const Duration(milliseconds: 450),
@@ -53,20 +119,28 @@ class _LeisurePageState extends State<LeisurePage> {
   }
 
   void _handleNavItem(BuildContext context, int index) {
+    if (index == 3) return;
     if (index == 4) return;
     if (index == 5) {
-      _openPage(context, BlogPage(
-        language: language,
-        onLanguageChanged: widget.onLanguageChanged,
-      ));
+      _openPage(
+        context,
+        HomeScreen(
+          language: language,
+          onLanguageChanged: widget.onLanguageChanged ?? (_) {},
+          initialIndex: 5,
+        ),
+      );
       return;
     }
 
-    _openPage(context, HomeScreen(
-      language: language,
-      onLanguageChanged: widget.onLanguageChanged ?? (_) {},
-      initialIndex: index,
-    ));
+    _openPage(
+      context,
+      HomeScreen(
+        language: language,
+        onLanguageChanged: widget.onLanguageChanged ?? (_) {},
+        initialIndex: index,
+      ),
+    );
   }
 
   @override
@@ -146,7 +220,10 @@ class _LeisurePageState extends State<LeisurePage> {
                   ],
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24, vertical: 18),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 24,
+                    vertical: 18,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -175,20 +252,32 @@ class _LeisurePageState extends State<LeisurePage> {
                           childAspectRatio: isMobile ? 1.7 : 1.25,
                         ),
                         children: [
-                          _miniCard(
+                          _videoCard(
                             title: 'VISION',
-                            text:
-                                'Devenir la référence en Afrique Centrale pour la formation de footballeurs professionnels.',
+                            text: AppStrings.leisureVideoDescription(
+                              0,
+                              'Devenir la référence en Afrique Centrale pour la formation de footballeurs professionnels.',
+                            ),
+                            controller: _videoControllers[0],
+                            error: _videoErrors[0],
                           ),
-                          _miniCard(
+                          _videoCard(
                             title: 'OBJECTIF',
-                            text:
-                                'Professionnaliser 1000 jeunes talents filles et garçons d’ici 2036.',
+                            text: AppStrings.leisureVideoDescription(
+                              1,
+                              'Professionnaliser 1000 jeunes talents filles et garçons d’ici 2036.',
+                            ),
+                            controller: _videoControllers[1],
+                            error: _videoErrors[1],
                           ),
-                          _miniCard(
+                          _videoCard(
                             title: 'MISSION',
-                            text:
-                                'Former, encadrer, éduquer et guider vers les clubs professionnels.',
+                            text: AppStrings.leisureVideoDescription(
+                              2,
+                              'Former, encadrer, éduquer et guider vers les clubs professionnels.',
+                            ),
+                            controller: _videoControllers[2],
+                            error: _videoErrors[2],
                           ),
                         ],
                       ),
@@ -198,6 +287,7 @@ class _LeisurePageState extends State<LeisurePage> {
                         body:
                             'Formation quotidienne, encadrement de coachs certifiés, compétitions locales et stages internationaux.',
                       ),
+                      const SizedBox(height: 16),
                       const SizedBox(height: 16),
                       Container(
                         width: double.infinity,
@@ -283,35 +373,102 @@ class _LeisurePageState extends State<LeisurePage> {
     );
   }
 
-  Widget _miniCard({required String title, required String text}) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryBlue,
-            ),
+  Widget _videoCard({
+    required String title,
+    required String text,
+    required VideoPlayerController controller,
+    required String? error,
+  }) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.zero,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: InkWell(
+        onTap: error == null && controller.value.isInitialized
+            ? () => _toggleVideo(controller)
+            : null,
+        child: SizedBox(
+          height: 190,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (error != null)
+                const ColoredBox(
+                  color: AppColors.primaryBlue,
+                  child: Center(
+                    child: Icon(
+                      Icons.videocam_off_rounded,
+                      color: AppColors.accentGold,
+                      size: 34,
+                    ),
+                  ),
+                )
+              else if (controller.value.isInitialized)
+                FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: controller.value.size.width,
+                    height: controller.value.size.height,
+                    child: VideoPlayer(controller),
+                  ),
+                )
+              else
+                const ColoredBox(
+                  color: AppColors.primaryBlue,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.accentGold,
+                    ),
+                  ),
+                ),
+              const ColoredBox(color: Color(0x990B1F36)),
+              if (controller.value.isInitialized && !controller.value.isPlaying)
+                const Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 34,
+                      ),
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.accentGold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      text,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.7,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.7,
-              color: AppColors.textDark,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

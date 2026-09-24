@@ -3,14 +3,37 @@ import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../screens/credit_maison_page.dart';
 
-class ServicesSection extends StatelessWidget {
+class ServicesSection extends StatefulWidget {
   const ServicesSection({super.key, required this.language});
 
   final String language;
 
   @override
+  State<ServicesSection> createState() => _ServicesSectionState();
+}
+
+class _ServicesSectionState extends State<ServicesSection>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final cards = AppStrings.serviceCards(language);
+    final cards = AppStrings.serviceCards(widget.language);
     final icons = [
       Icons.construction_rounded,
       Icons.factory_rounded,
@@ -35,7 +58,7 @@ class ServicesSection extends StatelessWidget {
       width: double.infinity,
       color: AppColors.backgroundLight,
       padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 42 : 64,
+        vertical: isMobile ? 32 : 50,
         horizontal: isMobile ? 20 : 24,
       ),
       child: Center(
@@ -44,16 +67,16 @@ class ServicesSection extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                AppStrings.aboutTitle(language),
+                AppStrings.aboutTitle(widget.language),
                 style: TextStyle(
                   fontSize: isMobile ? 28 : 32,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primaryBlue,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
-                AppStrings.aboutDescription(language),
+                AppStrings.aboutDescription(widget.language),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isMobile ? 15 : 17,
@@ -61,18 +84,18 @@ class ServicesSection extends StatelessWidget {
                   height: 1.6,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 12),
               Text(
-                AppStrings.servicesTitle(language),
+                AppStrings.servicesTitle(widget.language),
                 style: TextStyle(
                   fontSize: isMobile ? 28 : 32,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primaryBlue,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
-                AppStrings.servicesSubtitle(language),
+                AppStrings.servicesSubtitle(widget.language),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isMobile ? 15 : 17,
@@ -80,7 +103,16 @@ class ServicesSection extends StatelessWidget {
                   height: 1.6,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 18),
+              _StatsStrip(
+                language: widget.language,
+                animation: CurvedAnimation(
+                  parent: _controller,
+                  curve: Curves.easeOutCubic,
+                ),
+                isMobile: isMobile,
+              ),
+              const SizedBox(height: 16),
               isMobile
                   ? Column(
                       children: cards
@@ -89,7 +121,7 @@ class ServicesSection extends StatelessWidget {
                           .map(
                             (entry) => Padding(
                               padding: EdgeInsets.only(
-                                bottom: entry.key == cards.length - 1 ? 0 : 14,
+                                bottom: entry.key == cards.length - 1 ? 0 : 10,
                               ),
                               child: SizedBox(
                                 width: cardWidth,
@@ -172,7 +204,7 @@ class ServicesSection extends StatelessWidget {
                                                         animation,
                                                         secondaryAnimation,
                                                       ) => CreditMaisonPage(
-                                                        language: language,
+                                                        language: widget.language,
                                                       ),
                                                   transitionsBuilder:
                                                       (
@@ -181,20 +213,18 @@ class ServicesSection extends StatelessWidget {
                                                         secondaryAnimation,
                                                         child,
                                                       ) {
-                                                        final tween =
-                                                            Tween(
-                                                              begin:
-                                                                  const Offset(
-                                                                    1,
-                                                                    0,
-                                                                  ),
-                                                              end: Offset.zero,
-                                                            ).chain(
-                                                              CurveTween(
-                                                                curve: Curves
-                                                                    .easeOutCubic,
-                                                              ),
-                                                            );
+                                                        final tween = Tween(
+                                                          begin: const Offset(
+                                                            1,
+                                                            0,
+                                                          ),
+                                                          end: Offset.zero,
+                                                        ).chain(
+                                                          CurveTween(
+                                                            curve:
+                                                                Curves.easeOutCubic,
+                                                          ),
+                                                        );
                                                         return SlideTransition(
                                                           position: animation
                                                               .drive(tween),
@@ -216,7 +246,8 @@ class ServicesSection extends StatelessWidget {
                                               size: 16,
                                             ),
                                             label: Text(
-                                              language == AppStrings.languageFr
+                                              widget.language ==
+                                                      AppStrings.languageFr
                                                   ? 'Découvrir'
                                                   : 'Discover',
                                             ),
@@ -284,6 +315,7 @@ class ServicesSection extends StatelessWidget {
                                       context,
                                       entry,
                                       isMobile: false,
+                                      language: widget.language,
                                     ),
                                   ),
                                 ),
@@ -303,6 +335,7 @@ class ServicesSection extends StatelessWidget {
     BuildContext context,
     MapEntry<int, Map<String, String>> entry, {
     required bool isMobile,
+    required String language,
   }) {
     final icons = [
       Icons.construction_rounded,
@@ -383,3 +416,117 @@ class ServicesSection extends StatelessWidget {
     );
   }
 }
+
+class _StatData {
+  const _StatData({
+    required this.value,
+    required this.labelFr,
+    required this.labelEn,
+    this.suffix = '',
+  });
+
+  final double value;
+  final String labelFr;
+  final String labelEn;
+  final String suffix;
+}
+
+class _StatsStrip extends StatelessWidget {
+  const _StatsStrip({
+    required this.language,
+    required this.animation,
+    required this.isMobile,
+  });
+
+  final String language;
+  final Animation<double> animation;
+  final bool isMobile;
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = [
+      _StatData(
+        value: 12,
+        suffix: '+',
+        labelFr: 'Domaines touchés',
+        labelEn: 'Sectors covered',
+      ),
+      _StatData(
+        value: 28,
+        suffix: '+',
+        labelFr: 'Projets réalisés',
+        labelEn: 'Completed projects',
+      ),
+      _StatData(
+        value: 8,
+        suffix: '+',
+        labelFr: 'Projets en cours',
+        labelEn: 'Ongoing projects',
+      ),
+    ];
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: isMobile ? 12 : 18,
+      runSpacing: 14,
+      children: stats
+          .map(
+            (stat) => AnimatedBuilder(
+              animation: animation,
+              builder: (context, _) {
+                final currentValue = stat.value * animation.value;
+                final label = language == AppStrings.languageFr
+                    ? stat.labelFr
+                    : stat.labelEn;
+
+                return Container(
+                  width: isMobile ? 190 : 220,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 14 : 18,
+                    vertical: isMobile ? 16 : 18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: AppColors.accentGold.withOpacity(0.4),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        '${currentValue.round()}${stat.suffix}',
+                        style: TextStyle(
+                          fontSize: isMobile ? 28 : 32,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isMobile ? 12 : 13,
+                          color: AppColors.textDark,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+

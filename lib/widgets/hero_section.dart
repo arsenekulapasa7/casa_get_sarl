@@ -6,9 +6,13 @@ class HeroSection extends StatelessWidget {
   const HeroSection({
     super.key,
     required this.language,
+    required this.onContactPressed,
+    required this.onProjectsPressed,
   });
 
   final String language;
+  final VoidCallback onContactPressed;
+  final VoidCallback onProjectsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -24,18 +28,30 @@ class HeroSection extends StatelessWidget {
     final titleFont = isMobile
         ? 26.0
         : isTablet
-            ? 38.0
-            : 52.0;
-    final subtitleFont = isMobile ? 14.0 : isTablet ? 16.0 : 18.0;
+        ? 38.0
+        : 52.0;
+    final subtitleFont = isMobile
+        ? 14.0
+        : isTablet
+        ? 16.0
+        : 18.0;
     final buttonPadding = isMobile
-      ? const EdgeInsets.symmetric(horizontal: 22, vertical: 16)
+        ? const EdgeInsets.symmetric(horizontal: 22, vertical: 16)
         : const EdgeInsets.symmetric(horizontal: 28, vertical: 18);
 
     return Container(
       width: double.infinity,
-      height: isMobile ? 480 : isTablet ? 540 : 620,
+      height: isMobile
+          ? 480
+          : isTablet
+          ? 540
+          : 620,
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20.0 : isTablet ? 40.0 : 80.0,
+        horizontal: isMobile
+            ? 20.0
+            : isTablet
+            ? 40.0
+            : 80.0,
         vertical: isMobile ? 28.0 : 40.0,
       ),
       decoration: const BoxDecoration(
@@ -45,9 +61,7 @@ class HeroSection extends StatelessWidget {
         ),
       ),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xAA0A2A42),
-        ),
+        decoration: const BoxDecoration(color: Color(0xAA0A2A42)),
         alignment: Alignment.center,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -99,7 +113,7 @@ class HeroSection extends StatelessWidget {
                 alignment: WrapAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: onContactPressed,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accentGold,
                       foregroundColor: AppColors.primaryBlue,
@@ -117,7 +131,7 @@ class HeroSection extends StatelessWidget {
                     ),
                   ),
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: onProjectsPressed,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Colors.white, width: 1.5),
