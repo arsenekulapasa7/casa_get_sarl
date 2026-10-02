@@ -94,7 +94,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
                 children: List.generate(
                   projects.length,
                   (index) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: const Duration(milliseconds: (500)),
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     height: 7,
                     width: index == _currentPage ? 22 : 7,
