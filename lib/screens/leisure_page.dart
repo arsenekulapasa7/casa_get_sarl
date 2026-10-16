@@ -32,7 +32,8 @@ class _LeisurePageState extends State<LeisurePage> {
 
   late final List<VideoPlayerController> _videoControllers = _videoAssets
       .map(
-        (asset) => ContentStore.isDataUrl(asset)
+        (asset) =>
+          ContentStore.isDataUrl(asset) || asset.startsWith('http')
             ? VideoPlayerController.networkUrl(Uri.parse(asset))
             : VideoPlayerController.asset(asset),
       )

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../services/content_store.dart';
+import '../services/news_repository.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -14,6 +15,8 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminPageState extends State<AdminPage> {
+  static const _maxMediaFileSizeBytes = 50 * 1024 * 1024;
+
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _heroTitleFr;
   late final TextEditingController _heroTitleEn;
@@ -23,6 +26,10 @@ class _AdminPageState extends State<AdminPage> {
   late final TextEditingController _contactSubtitleEn;
   late final TextEditingController _newsTitleFr;
   late final TextEditingController _newsExcerptFr;
+  late final TextEditingController _newsContentFr;
+  late final TextEditingController _newsTitleEn;
+  late final TextEditingController _newsExcerptEn;
+  late final TextEditingController _newsContentEn;
   late final TextEditingController _newsImage;
   late final List<TextEditingController> _videoControllers;
   late final List<TextEditingController> _videoDescriptionControllers;
@@ -50,12 +57,12 @@ class _AdminPageState extends State<AdminPage> {
     _contactSubtitleEn = TextEditingController(
       text: AppStrings.contactSubtitle(AppStrings.languageEn),
     );
-    _newsTitleFr = TextEditingController(
-      text: ContentStore.instance.value('news.fr.title'),
-    );
-    _newsExcerptFr = TextEditingController(
-      text: ContentStore.instance.value('news.fr.excerpt'),
-    );
+    _newsTitleFr = TextEditingController();
+    _newsExcerptFr = TextEditingController();
+    _newsContentFr = TextEditingController();
+    _newsTitleEn = TextEditingController();
+    _newsExcerptEn = TextEditingController();
+    _newsContentEn = TextEditingController();
     _newsImage = TextEditingController(
       text: ContentStore.instance.value('news.fr.image'),
     );
@@ -90,6 +97,10 @@ class _AdminPageState extends State<AdminPage> {
       _contactSubtitleEn,
       _newsTitleFr,
       _newsExcerptFr,
+      _newsContentFr,
+      _newsTitleEn,
+      _newsExcerptEn,
+      _newsContentEn,
       _newsImage,
       ..._videoControllers,
       ..._videoDescriptionControllers,
@@ -102,59 +113,168 @@ class _AdminPageState extends State<AdminPage> {
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _saving = true);
-    await ContentStore.instance.save(
-      heroTitleFr: _heroTitleFr.text.trim(),
-      heroTitleEn: _heroTitleEn.text.trim(),
-      heroSubtitleFr: _heroSubtitleFr.text.trim(),
-      heroSubtitleEn: _heroSubtitleEn.text.trim(),
-      contactSubtitleFr: _contactSubtitleFr.text.trim(),
-      contactSubtitleEn: _contactSubtitleEn.text.trim(),
-    );
-    await ContentStore.instance.saveValues({
-      'news.fr.title': _newsTitleFr.text.trim(),
-      'news.fr.excerpt': _newsExcerptFr.text.trim(),
-      'news.fr.image': _newsImage.text.trim(),
-      'news.fr.date': _formatDate(DateTime.now()),
-      for (var index = 0; index < _videoControllers.length; index++)
-        'leisure.video_$index': _videoControllers[index].text.trim(),
-      for (var index = 0; index < _videoDescriptionControllers.length; index++)
-        'leisure.video_description_$index': _videoDescriptionControllers[index]
-            .text
-            .trim(),
-      for (var index = 0; index < _projectImageControllers.length; index++)
-        'project.image_$index': _projectImageControllers[index].text.trim(),
-    });
-    if (!mounted) return;
-    setState(() => _saving = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Contenus enregistrés sur cet appareil.')),
-    );
-  }
+    final newsFields = [
+      _newsTitleFr,
+      _newsExcerptFr,
+      _newsContentFr,
+      _newsTitleEn,
+      _newsExcerptEn,
+      _newsContentEn,
+    ];
+    final hasNewsDraft = newsFields.any((field) => field.text.trim().isNotEmpty);
+    if (hasNewsDraft && newsFields.any((field) => field.text.trim().isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Complète les champs de l’actualité en français et en anglais.'),
+        ),
+      );
+      return;
+    }
 
-  String _formatDate(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    return '$day/$month/${date.year}';
+    setState(() => _saving = true);
+    try {
+      for (final controller in [
+        ..._videoControllers,
+        ..._projectImageControllers,
+      ]) {
+        controller.text = await _uploadInlineMedia(controller.text.trim());
+      }
+      _newsImage.text = await _uploadInlineMedia(_newsImage.text.trim());
+
+      await ContentStore.instance.save(
+        heroTitleFr: _heroTitleFr.text.trim(),
+        heroTitleEn: _heroTitleEn.text.trim(),
+        heroSubtitleFr: _heroSubtitleFr.text.trim(),
+        heroSubtitleEn: _heroSubtitleEn.text.trim(),
+        contactSubtitleFr: _contactSubtitleFr.text.trim(),
+        contactSubtitleEn: _contactSubtitleEn.text.trim(),
+      );
+      await ContentStore.instance.saveValues({
+        for (var index = 0; index < _videoControllers.length; index++)
+          'leisure.video_$index': _videoControllers[index].text.trim(),
+        for (
+          var index = 0;
+          index < _videoDescriptionControllers.length;
+          index++
+        )
+          'leisure.video_description_$index':
+              _videoDescriptionControllers[index].text.trim(),
+        for (var index = 0; index < _projectImageControllers.length; index++)
+          'project.image_$index': _projectImageControllers[index].text.trim(),
+      });
+
+      if (hasNewsDraft) {
+        await NewsRepository.publish(
+          titleFr: _newsTitleFr.text.trim(),
+          excerptFr: _newsExcerptFr.text.trim(),
+          contentFr: _newsContentFr.text.trim(),
+          titleEn: _newsTitleEn.text.trim(),
+          excerptEn: _newsExcerptEn.text.trim(),
+          contentEn: _newsContentEn.text.trim(),
+          imageUrl: _newsImage.text.trim(),
+        );
+      }
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            hasNewsDraft
+                ? 'Modifications enregistrées et actualité publiée.'
+                : 'Modifications enregistrées pour tous les visiteurs.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec de la publication : $error')),
+      );
+    }
   }
 
   Future<void> _pickFile(
     TextEditingController controller, {
     required FileType type,
   }) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: type,
-      withData: true,
-    );
-    if (result == null || result.files.single.bytes == null) return;
+    if (!NewsRepository.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Supabase n’est pas configuré.')),
+      );
+      return;
+    }
 
-    final file = result.files.single;
-    final extension = file.extension?.toLowerCase() ?? '';
-    final mimeType = type == FileType.video
-        ? 'video/${extension == 'mov' ? 'quicktime' : extension}'
-        : 'image/${extension == 'jpg' ? 'jpeg' : extension}';
-    controller.text = 'data:$mimeType;base64,${base64Encode(file.bytes!)}';
-    if (mounted) setState(() {});
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: type,
+        withData: true,
+      );
+      if (result == null || !mounted) return;
+
+      final file = result.files.single;
+      if (file.size > _maxMediaFileSizeBytes) {
+        throw Exception('Le fichier dépasse la limite de 50 Mo.');
+      }
+      final bytes = file.bytes;
+      if (bytes == null) {
+        throw Exception('Le navigateur n’a pas pu lire ce fichier.');
+      }
+
+      final extension = file.extension?.toLowerCase() ?? '';
+      if (extension.isEmpty) {
+        throw Exception('Le fichier doit avoir une extension valide.');
+      }
+      final contentType = _contentType(type, extension);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Téléversement du fichier...')),
+      );
+      final url = await NewsRepository.uploadMedia(
+        bytes,
+        fileName: file.name,
+        contentType: contentType,
+      );
+      if (!mounted) return;
+
+      controller.text = url;
+      setState(() {});
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Fichier téléversé.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec du téléversement : $error')),
+      );
+    }
+  }
+
+  String _contentType(FileType type, String extension) {
+    if (type == FileType.video) {
+      if (extension == 'mov') return 'video/quicktime';
+      if (extension == 'm4v') return 'video/x-m4v';
+      return 'video/$extension';
+    }
+    if (extension == 'jpg' || extension == 'jpeg') return 'image/jpeg';
+    return 'image/$extension';
+  }
+
+  Future<String> _uploadInlineMedia(String value) async {
+    if (!value.startsWith('data:')) return value;
+
+    final separator = value.indexOf(',');
+    if (separator < 0) throw const FormatException('Fichier média invalide.');
+    final contentType = value.substring(5, separator).split(';').first;
+    final bytes = base64Decode(value.substring(separator + 1));
+    if (bytes.length > _maxMediaFileSizeBytes) {
+      throw Exception('Le fichier dépasse la limite de 50 Mo.');
+    }
+    final extension = contentType.split('/').last;
+    return NewsRepository.uploadMedia(
+      bytes,
+      fileName: 'admin-media.$extension',
+      contentType: contentType,
+    );
   }
 
   Widget _mediaField(
@@ -267,8 +387,32 @@ class _AdminPageState extends State<AdminPage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 14),
-            _field(_newsTitleFr, 'Titre de la nouvelle'),
-            _field(_newsExcerptFr, 'Résumé de la nouvelle', maxLines: 3),
+            _field(_newsTitleFr, 'Titre · Français', required: false),
+            _field(
+              _newsExcerptFr,
+              'Résumé · Français',
+              maxLines: 3,
+              required: false,
+            ),
+            _field(
+              _newsContentFr,
+              'Article · Français',
+              maxLines: 8,
+              required: false,
+            ),
+            _field(_newsTitleEn, 'Title · English', required: false),
+            _field(
+              _newsExcerptEn,
+              'Excerpt · English',
+              maxLines: 3,
+              required: false,
+            ),
+            _field(
+              _newsContentEn,
+              'Article · English',
+              maxLines: 8,
+              required: false,
+            ),
             _mediaField(
               _newsImage,
               'Image de l’actualité',

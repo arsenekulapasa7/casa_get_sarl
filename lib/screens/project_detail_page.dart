@@ -76,7 +76,9 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                     borderRadius: BorderRadius.circular(18),
                     child: AspectRatio(
                       aspectRatio: isMobile ? 1.35 : 2.3,
-                      child: widget.project.imagePath.startsWith('data:')
+                        child:
+                          widget.project.imagePath.startsWith('data:') ||
+                            widget.project.imagePath.startsWith('http')
                           ? Image.network(
                               widget.project.imagePath,
                               fit: BoxFit.cover,
