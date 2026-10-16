@@ -1,6 +1,7 @@
 import 'content_database.dart';
 import 'content_database_io.dart'
     if (dart.library.html) 'content_database_web.dart';
+import 'news_repository.dart';
 
 class ContentStore {
   ContentStore._();
@@ -42,6 +43,20 @@ class ContentStore {
       final value = await _database.read(key);
       if (value != null) _values[key] = value;
     }
+
+    if (NewsRepository.isConfigured) {
+      try {
+        final sharedValues = await NewsRepository.fetchSiteContent();
+        _values.addAll(sharedValues);
+        await Future.wait(
+          sharedValues.entries.map(
+            (entry) => _database.write(entry.key, entry.value),
+          ),
+        );
+      } catch (_) {
+        // Keep the local cache available when Supabase cannot be reached.
+      }
+    }
   }
 
   String get heroTitleFr => _values[_heroTitleFrKey] ?? '';
@@ -56,6 +71,19 @@ class ContentStore {
   static bool isDataUrl(String value) => value.startsWith('data:');
 
   Future<void> saveValues(Map<String, String> values) async {
+    if (NewsRepository.isConfigured) {
+      await NewsRepository.saveSiteContent(values);
+      _values.addAll(values);
+      try {
+        await Future.wait(
+          values.entries.map((entry) => _database.write(entry.key, entry.value)),
+        );
+      } catch (_) {
+        // Supabase is the source of truth; the local browser cache is optional.
+      }
+      return;
+    }
+
     await Future.wait(
       values.entries.map((entry) => _database.write(entry.key, entry.value)),
     );
