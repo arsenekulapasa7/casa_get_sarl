@@ -59,7 +59,8 @@ class _ProjectsSectionState extends State<ProjectsSection> {
               onPageChanged: (page) => setState(() => _currentPage = page),
               itemBuilder: (context, index) {
                 final imagePath = projects[index].imagePath;
-                return imagePath.startsWith('data:')
+                return imagePath.startsWith('data:') ||
+                  imagePath.startsWith('http')
                     ? Image.network(imagePath, fit: BoxFit.cover)
                     : Image.asset(imagePath, fit: BoxFit.cover);
               },
