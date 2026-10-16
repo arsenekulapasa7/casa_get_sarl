@@ -183,6 +183,12 @@ class _AdminPageState extends State<AdminPage> {
                 ? 'Modifications enregistrées et actualité publiée.'
                 : 'Modifications enregistrées pour tous les visiteurs.',
           ),
+          action: SnackBarAction(
+            label: 'Voir le site',
+            onPressed: () => Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/', (route) => false),
+          ),
         ),
       );
     } catch (error) {
@@ -351,7 +357,7 @@ class _AdminPageState extends State<AdminPage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Les changements sont sauvegardés localement sur cet appareil.',
+              'Les changements sont sauvegardés en ligne et visibles par les visiteurs.',
             ),
             const SizedBox(height: 28),
             const Text(
